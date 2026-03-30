@@ -11,11 +11,12 @@
 | 04 | [아이맥(iMac M1) + Lima로 K3s 워커 노드 구성](docs/04-아이맥-lima-설치.md) | Lima 설치, Ubuntu VM 생성, 포트 포워딩, K3s 에이전트 연결 |
 | 05 | [맥북에어에서 외부 원격으로 서버 관리하기](docs/05-맥북에어-원격-관리.md) | 고정 IP + 포트포워딩, SSH 설정, kubectl 원격 접속, 맥북에어 관리 워크스테이션 구성 |
 | 06 | [노드 NotReady 트러블슈팅 (iMac Lima 워커 노드)](docs/06-노드-notready-트러블슈팅.md) | Lima 네트워크 단절로 인한 NotReady 진단 및 복구, 예방 조치 |
+| 07 | N5095 미니PC 워커 노드 추가 *(작업 예정)* | Ubuntu 설치, K3s 워커 노드 구성, 클러스터 합류 |
 # KEUN-Server-Federation: 하이브리드 K3s 클러스터
 
 > *"오래된 하드웨어도 새로운 삶을 누릴 수 있다. 리눅스는 배울 수 있다. 그리고 클러스터는 처음부터 직접 만들 수 있다."*
 
-다양한 하드웨어 자원(Intel N100, 2014 맥북 프로, Lima VM을 활용한 iMac M1)을 활용하여 구축한 하이브리드 쿠버네티스(K3s) 클러스터의 구축 및 운영 기록입니다.
+다양한 하드웨어 자원(Intel N100, 2014 맥북 프로, Lima VM을 활용한 iMac M1, 맥북에어(원격 관리 워크스테이션))을 활용하여 구축한 하이브리드 쿠버네티스(K3s) 클러스터의 구축 및 운영 기록입니다. Intel N5095 미니PC를 추가 워커 노드로 편입하는 작업도 진행 예정입니다.
 
 ---
 
@@ -23,26 +24,30 @@
 
 ```mermaid
 graph TD
-    subgraph "마스터 노드"
-        N100["🖥️ Intel N100<br/>Ubuntu Server 22.04<br/>K3s 서버 (마스터)<br/>192.168.x.x"]
+    subgraph EXT["외부 네트워크 (원격 관리)"]
+        MBA["💻 맥북에어<br/>macOS — 관리 워크스테이션<br/>kubectl / SSH"]
     end
 
-    subgraph "워커 노드"
-        MBP["💻 2014 맥북 프로 (인텔)<br/>Ubuntu 22.04 — 업사이클링!<br/>K3s 에이전트 (워커)<br/>192.168.x.x"]
-        LIMA["🍎 iMac M1 — Lima VM<br/>macOS 위의 Ubuntu VM<br/>K3s 에이전트 (워커)<br/>포트 포워딩: 6443"]
+    subgraph LAN["홈 LAN"]
+        ROUTER["🌐 공유기<br/>포트포워딩<br/>2210→N100:22 │ 2220→MBP:22 │ 6443→N100:6443"]
+
+        subgraph MASTER["마스터 노드"]
+            N100["🖥️ Intel N100<br/>Ubuntu Server 22.04<br/>K3s 서버 (마스터)<br/>192.168.x.10"]
+        end
+
+        subgraph WORKERS["워커 노드"]
+            MBP["💻 맥북 프로 2014 (인텔)<br/>Ubuntu 22.04 — 업사이클링!<br/>K3s 에이전트 (워커)<br/>192.168.x.20"]
+            LIMA["🍎 iMac M1 — Lima VM<br/>macOS 위의 Ubuntu VM<br/>K3s 에이전트 (워커)<br/>192.168.x.30"]
+            N5095["🖥️ Intel N5095 (추가 예정)<br/>Ubuntu Server<br/>K3s 에이전트 (워커)<br/>192.168.x.40"]
+        end
     end
 
-    subgraph "워크로드"
-        POD1["📦 파드: nginx"]
-        POD2["📦 파드: app-service"]
-        POD3["📦 파드: monitoring"]
-    end
-
-    N100 -- "kubectl / K3s API" --> MBP
-    N100 -- "포트 포워딩 :6443" --> LIMA
-    MBP --> POD1
-    MBP --> POD2
-    LIMA --> POD3
+    MBA -- "SSH / kubectl (포트포워딩 경유)" --> ROUTER
+    ROUTER --> N100
+    ROUTER --> MBP
+    N100 -- "K3s API" --> MBP
+    N100 -- "K3s API" --> LIMA
+    N100 -. "연결 예정" .-> N5095
 ```
 
 ---
@@ -155,7 +160,8 @@ KEUN-Server-Federation/
 │   ├── 03-맥북프로2014-우분투-설치.md
 │   ├── 04-아이맥-lima-설치.md
 │   ├── 05-맥북에어-원격-관리.md       # 고정 IP + 포트포워딩, 원격 SSH/kubectl 설정
-│   └── 06-노드-notready-트러블슈팅.md # Lima 네트워크 단절로 인한 NotReady 진단 및 복구
+│   ├── 06-노드-notready-트러블슈팅.md # Lima 네트워크 단절로 인한 NotReady 진단 및 복구
+│   └── 07-n5095-워커-노드-추가.md    # (작업 예정) N5095 Ubuntu 설치 및 K3s 클러스터 합류
 ├── manifests/                         # 쿠버네티스 YAML 매니페스트
 │   ├── namespace.yaml
 │   ├── nginx-deployment.yaml
@@ -209,6 +215,8 @@ kubectl apply -f manifests/monitoring/
 | `n100-master` | Intel N100 미니PC (4코어/4스레드, 16GB RAM) | Ubuntu Server 22.04 | 컨트롤 플레인 |
 | `mbp-2014-worker` | 맥북 프로 13" 2014 (i5, 8GB RAM) | Ubuntu 22.04 LTS | 워커 노드 |
 | `lima-worker` | iMac M1 → Lima VM (4 vCPU, 8GB vRAM) | Ubuntu 22.04 (VM) | 워커 노드 |
+| `n5095-worker` *(예정)* | Intel N5095 미니PC | Ubuntu Server | 워커 노드 (추가 예정) |
+| — | 맥북에어 | macOS | 원격 관리 워크스테이션 |
 
 ---
 
