@@ -9,7 +9,7 @@
 | 02 | [Docker 설치 및 텔레그램 봇 만들기](docs/02-docker-설치-및-텔레그램-봇.md) | Docker 설치, Python 텔레그램 봇 컨테이너로 운영 |
 | 03 | [맥북프로 2014에 우분투 설치하기](docs/03-맥북프로2014-우분투-설치.md) | 인텔 맥에 Ubuntu 22.04 설치, Wi-Fi 드라이버, K3s 워커 노드 준비 |
 | 04 | [아이맥(iMac M1) + Lima로 K3s 워커 노드 구성](docs/04-아이맥-lima-설치.md) | Lima 설치, Ubuntu VM 생성, 포트 포워딩, K3s 에이전트 연결 |
-| 05 | [맥북에어에서 외부 원격으로 서버 관리하기](docs/05-맥북에어-원격-관리.md) | Tailscale VPN, SSH 설정, kubectl 원격 접속, 맥북에어 관리 워크스테이션 구성 |
+| 05 | [맥북에어에서 외부 원격으로 서버 관리하기](docs/05-맥북에어-원격-관리.md) | 고정 IP + 포트포워딩, SSH 설정, kubectl 원격 접속, 맥북에어 관리 워크스테이션 구성 |
 # KEUN-Server-Federation: 하이브리드 K3s 클러스터
 
 > *"오래된 하드웨어도 새로운 삶을 누릴 수 있다. 리눅스는 배울 수 있다. 그리고 클러스터는 처음부터 직접 만들 수 있다."*
@@ -153,7 +153,7 @@ KEUN-Server-Federation/
 │   ├── 02-docker-설치-및-텔레그램-봇.md
 │   ├── 03-맥북프로2014-우분투-설치.md
 │   ├── 04-아이맥-lima-설치.md
-│   └── 05-맥북에어-원격-관리.md       # Tailscale VPN, 원격 SSH/kubectl 설정
+│   └── 05-맥북에어-원격-관리.md       # 고정 IP + 포트포워딩, 원격 SSH/kubectl 설정
 ├── manifests/                         # 쿠버네티스 YAML 매니페스트
 │   ├── namespace.yaml
 │   ├── nginx-deployment.yaml
@@ -164,7 +164,7 @@ KEUN-Server-Federation/
         ├── mbp-2014-ubuntu-setup.sh        # 2014 맥북 프로용 Ubuntu 설정 스크립트
         ├── lima-ubuntu-k3s.yaml            # Lima VM 템플릿 (Ubuntu 22.04, 4vCPU, 8GiB)
         ├── lima-k3s-setup.sh               # macOS 호스트 스크립트 — Lima 설치 + K3s 에이전트 클러스터 참여
-        ├── tailscale-server-setup.sh       # 서버용 Tailscale 설치 스크립트 (Ubuntu)
+        ├── ssh-port-forward-setup.sh       # 서버용 SSH 원격 접속 설정 스크립트 (고정 IP + 포트포워딩)
         └── macbook-air-remote-setup.sh     # 맥북에어 원격 관리 환경 설정 스크립트
 ```
 
