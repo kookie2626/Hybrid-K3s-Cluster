@@ -52,9 +52,33 @@ apt-get install -y \
 ok "Essential packages installed."
 
 # --------------------------------------------------------------------------- #
-# 3. MacBook Pro 2014 — Broadcom Wi-Fi driver (BCM4360)
+# 3. MacBook Pro 2014 — Kernel 6.8 via HWE (required for BCM4360 Wi-Fi)
+#    The default Ubuntu 22.04 kernel (5.15) fails to activate the Broadcom
+#    BCM4360 Wi-Fi driver even after installation. Upgrading to kernel 6.8
+#    via the HWE stack resolves this. A reboot into the new kernel is
+#    required before the Broadcom driver will load successfully.
+# --------------------------------------------------------------------------- #
+CURRENT_KERNEL_MAJOR=$(uname -r | cut -d. -f1)
+CURRENT_KERNEL_MINOR=$(uname -r | cut -d. -f2)
+
+if (( CURRENT_KERNEL_MAJOR < 6 || (CURRENT_KERNEL_MAJOR == 6 && CURRENT_KERNEL_MINOR < 8) )); then
+    info "Current kernel: $(uname -r). Installing kernel 6.8 via HWE stack..."
+    apt-get install -y linux-generic-hwe-22.04
+    ok "Kernel 6.8 (HWE) installed."
+    warn "A reboot is required to boot into the new kernel before the Wi-Fi driver will work."
+    warn "After rebooting, re-run this script to continue setup, or install the Wi-Fi driver manually:"
+    warn "  sudo apt install -y bcmwl-kernel-source && sudo modprobe wl"
+    warn "Rebooting in 10 seconds — press Ctrl+C to cancel."
+    sleep 10
+    reboot
+else
+    ok "Kernel $(uname -r) meets the 6.8+ requirement. Proceeding with Wi-Fi driver installation."
+fi
+
+# --------------------------------------------------------------------------- #
+# 4. MacBook Pro 2014 — Broadcom Wi-Fi driver (BCM4360)
 #    The 2014 MBP uses a Broadcom BCM4360 chip, which requires the
-#    proprietary 'wl' driver from the broadcom-sta-dkms package.
+#    proprietary 'wl' driver. Kernel 6.8+ is required (see step 3 above).
 # --------------------------------------------------------------------------- #
 info "Installing Broadcom Wi-Fi driver for MacBook Pro 2014 (BCM4360)..."
 apt-get install -y bcmwl-kernel-source
@@ -62,7 +86,7 @@ modprobe wl 2>/dev/null || warn "modprobe wl failed — may require a reboot."
 ok "Broadcom Wi-Fi driver installed. A reboot may be required to activate it."
 
 # --------------------------------------------------------------------------- #
-# 4. MacBook Pro — Keyboard and function-key fix
+# 5. MacBook Pro — Keyboard and function-key fix
 #    On MBP, F-keys default to media keys. This sets them to standard F-keys.
 # --------------------------------------------------------------------------- #
 info "Configuring Apple keyboard function keys..."
@@ -71,7 +95,7 @@ update-initramfs -u -k all
 ok "Function key mode set to standard F-keys (fnmode=2)."
 
 # --------------------------------------------------------------------------- #
-# 5. Enable SSH service
+# 6. Enable SSH service
 # --------------------------------------------------------------------------- #
 info "Enabling and starting SSH..."
 systemctl enable ssh
@@ -79,7 +103,7 @@ systemctl start ssh
 ok "SSH is running."
 
 # --------------------------------------------------------------------------- #
-# 6. Configure static IP (edit values below to match your network)
+# 7. Configure static IP (edit values below to match your network)
 # --------------------------------------------------------------------------- #
 NETPLAN_FILE="/etc/netplan/01-keun-cluster.yaml"
 INTERFACE="eth0"       # Change to your actual interface (check with: ip a)
@@ -107,7 +131,7 @@ netplan apply
 ok "Static IP configured: ${STATIC_IP} via ${INTERFACE}."
 
 # --------------------------------------------------------------------------- #
-# 7. Disable swap (required for Kubernetes / K3s)
+# 8. Disable swap (required for Kubernetes / K3s)
 # --------------------------------------------------------------------------- #
 info "Disabling swap..."
 swapoff -a
@@ -115,7 +139,7 @@ sed -i '/\sswap\s/d' /etc/fstab
 ok "Swap disabled."
 
 # --------------------------------------------------------------------------- #
-# 8. Set kernel parameters for K3s
+# 9. Set kernel parameters for K3s
 # --------------------------------------------------------------------------- #
 info "Setting kernel parameters for K3s networking..."
 cat > /etc/sysctl.d/99-k3s.conf <<EOF
@@ -127,7 +151,7 @@ sysctl --system
 ok "Kernel parameters applied."
 
 # --------------------------------------------------------------------------- #
-# 9. Install K3s agent
+# 10. Install K3s agent
 #    Replace <MASTER_IP> and <NODE_TOKEN> before running!
 # --------------------------------------------------------------------------- #
 MASTER_IP="${MASTER_IP:-<MASTER_IP>}"
@@ -150,7 +174,7 @@ else
 fi
 
 # --------------------------------------------------------------------------- #
-# 10. Done
+# 11. Done
 # --------------------------------------------------------------------------- #
 echo ""
 ok "======================================================"
