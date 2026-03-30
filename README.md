@@ -7,6 +7,7 @@
 |------|------|------|
 | 01 | [N100 미니PC를 서버로 만들기](docs/01-n100-서버-셋업.md) | Ubuntu Server 설치, 고정 IP, SSH 키 인증, 방화벽 설정 |
 | 02 | [Docker 설치 및 텔레그램 봇 만들기](docs/02-docker-설치-및-텔레그램-봇.md) | Docker 설치, Python 텔레그램 봇 컨테이너로 운영 |
+| 03 | [맥북프로 2014에 우분투 설치하기](docs/03-맥북프로2014-우분투-설치.md) | 인텔 맥에 Ubuntu 22.04 설치, Wi-Fi 드라이버, K3s 워커 노드 준비 |
 # KEUN-Server-Federation: Hybrid K3s Cluster
 
 > *"Old hardware deserves a second life. Linux can be learned. And a cluster can be built from scratch."*
