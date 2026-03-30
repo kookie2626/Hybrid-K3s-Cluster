@@ -42,6 +42,7 @@ apt-get install -y \
     git \
     vim \
     htop \
+    btop \
     net-tools \
     openssh-server \
     ca-certificates \
