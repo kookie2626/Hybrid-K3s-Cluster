@@ -5,7 +5,7 @@
 
 | 순서 | 제목 | 설명 |
 |------|------|------|
-| 01 | [N100 미니PC를 서버로 만들기](docs/01-n100-서버-셋업.md) | Ubuntu Server 설치, 고정 IP, SSH 키 인증, 방화벽 설정 |
+| 01 | [N100 미니PC를 서버로 만들기](docs/01-n100-서버-셋업.md) | Ubuntu 설치, 고정 IP, SSH 키 인증, 방화벽 설정 |
 | 02 | [Docker 설치 및 텔레그램 봇 만들기](docs/02-docker-설치-및-텔레그램-봇.md) | Docker 설치, Python 텔레그램 봇 컨테이너로 운영 |
 | 03 | [맥북프로 2014에 우분투 설치하기](docs/03-맥북프로2014-우분투-설치.md) | 인텔 맥에 Ubuntu 22.04 설치, Wi-Fi 드라이버, K3s 워커 노드 준비 |
 | 04 | [아이맥(iMac M1) + Lima로 K3s 워커 노드 구성](docs/04-아이맥-lima-설치.md) | Lima 설치, Ubuntu VM 생성, 포트 포워딩, K3s 에이전트 연결 |
@@ -23,11 +23,11 @@
 ```mermaid
 graph TD
     subgraph "마스터 노드"
-        N100["🖥️ Intel N100<br/>Ubuntu Server 22.04<br/>K3s 서버 (마스터)<br/>192.168.x.10"]
+        N100["🖥️ Intel N100<br/>Ubuntu Server 22.04<br/>K3s 서버 (마스터)<br/>192.168.x.x"]
     end
 
     subgraph "워커 노드"
-        MBP["💻 2014 맥북 프로 (인텔)<br/>Ubuntu 22.04 — 업사이클링!<br/>K3s 에이전트 (워커)<br/>192.168.x.20"]
+        MBP["💻 2014 맥북 프로 (인텔)<br/>Ubuntu 22.04 — 업사이클링!<br/>K3s 에이전트 (워커)<br/>192.168.x.x"]
         LIMA["🍎 iMac M1 — Lima VM<br/>macOS 위의 Ubuntu VM<br/>K3s 에이전트 (워커)<br/>포트 포워딩: 6443"]
     end
 
