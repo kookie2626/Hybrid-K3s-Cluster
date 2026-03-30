@@ -10,6 +10,7 @@
 | 03 | [맥북프로 2014에 우분투 설치하기](docs/03-맥북프로2014-우분투-설치.md) | 인텔 맥에 Ubuntu 22.04 설치, Wi-Fi 드라이버, K3s 워커 노드 준비 |
 | 04 | [아이맥(iMac M1) + Lima로 K3s 워커 노드 구성](docs/04-아이맥-lima-설치.md) | Lima 설치, Ubuntu VM 생성, 포트 포워딩, K3s 에이전트 연결 |
 | 05 | [맥북에어에서 외부 원격으로 서버 관리하기](docs/05-맥북에어-원격-관리.md) | 고정 IP + 포트포워딩, SSH 설정, kubectl 원격 접속, 맥북에어 관리 워크스테이션 구성 |
+| 06 | [노드 NotReady 트러블슈팅 (iMac Lima 워커 노드)](docs/06-노드-notready-트러블슈팅.md) | Lima 네트워크 단절로 인한 NotReady 진단 및 복구, 예방 조치 |
 # KEUN-Server-Federation: 하이브리드 K3s 클러스터
 
 > *"오래된 하드웨어도 새로운 삶을 누릴 수 있다. 리눅스는 배울 수 있다. 그리고 클러스터는 처음부터 직접 만들 수 있다."*
@@ -153,7 +154,8 @@ KEUN-Server-Federation/
 │   ├── 02-docker-설치-및-텔레그램-봇.md
 │   ├── 03-맥북프로2014-우분투-설치.md
 │   ├── 04-아이맥-lima-설치.md
-│   └── 05-맥북에어-원격-관리.md       # 고정 IP + 포트포워딩, 원격 SSH/kubectl 설정
+│   ├── 05-맥북에어-원격-관리.md       # 고정 IP + 포트포워딩, 원격 SSH/kubectl 설정
+│   └── 06-노드-notready-트러블슈팅.md # Lima 네트워크 단절로 인한 NotReady 진단 및 복구
 ├── manifests/                         # 쿠버네티스 YAML 매니페스트
 │   ├── namespace.yaml
 │   ├── nginx-deployment.yaml
