@@ -1,0 +1,47 @@
+# K3s cluster secrets and tokens
+node-token
+*.token
+k3s.yaml
+kubeconfig
+kubeconfig.yaml
+*.kubeconfig
+
+# Environment variable files
+.env
+.env.*
+*.env
+
+# Private key files
+*.pem
+*.key
+id_rsa
+id_ed25519
+*.priv
+
+# Lima VM sensitive configs (may contain keys)
+.lima/*/ssh.pub
+.lima/*/ca.crt
+
+# OS-generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
