@@ -212,11 +212,11 @@ kubectl apply -f manifests/monitoring/
 
 | 노드 | 하드웨어 | 운영체제 | 역할 |
 |------|----------|----------|------|
-| `n100-master` | Intel N100 미니PC (4코어/4스레드, 16GB RAM) | Ubuntu Server 22.04 | 컨트롤 플레인 |
-| `mbp-2014-worker` | 맥북 프로 13" 2014 (i5, 8GB RAM) | Ubuntu 22.04 LTS | 워커 노드 |
-| `lima-worker` | iMac M1 → Lima VM (4 vCPU, 8GB vRAM) | Ubuntu 22.04 (VM) | 워커 노드 |
-| `n5095-worker` *(예정)* | Intel N5095 미니PC | Ubuntu Server | 워커 노드 (추가 예정) |
-| — | 맥북에어 | macOS | 원격 관리 워크스테이션 |
+| `n100-master` | Intel N100 미니PC (4코어/4스레드, 16GB RAM, 256G SSD) | Ubuntu Server 22.04 | 컨트롤 플레인 |
+| `mbp-2014-worker` | 맥북 프로 13" 2014 (i5, 16GB RAM) | Ubuntu 22.04 LTS | 워커 노드 |
+| `lima-worker` | iMac(M1) → Lima VM (4 vCPU, 8GB vRAM) | Ubuntu 22.04 (VM) | 워커 노드 |
+| `n5095-worker` *(예정)* | Intel N5095 미니PC (8G RAM, 256G SSD) | Ubuntu Server | 워커 노드 (추가 예정) |
+| — | 맥북에어(M2) | macOS | 원격 관리 워크스테이션 |
 
 ---
 
