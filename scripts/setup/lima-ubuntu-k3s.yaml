@@ -1,0 +1,112 @@
+# =============================================================================
+# lima-ubuntu-k3s.yaml
+# Lima VM template — Ubuntu 22.04 LTS configured as a K3s worker node
+#
+# Designed for Apple Silicon iMac (M1/M2/M3).
+# For Intel Mac, change arch: aarch64 → x86_64 and swap the image URL.
+#
+# Usage:
+#   limactl start --name=k3s-worker ./lima-ubuntu-k3s.yaml
+#   limactl shell k3s-worker
+# =============================================================================
+
+vmType: qemu
+os: Linux
+
+# Apple Silicon (M1/M2/M3) — change to x86_64 for Intel Mac
+arch: aarch64
+
+images:
+  # ARM64 image for Apple Silicon
+  - location: "https://cloud-images.ubuntu.com/releases/22.04/release/ubuntu-22.04-server-cloudimg-arm64.img"
+    arch: "aarch64"
+  # AMD64 fallback for Intel Mac
+  - location: "https://cloud-images.ubuntu.com/releases/22.04/release/ubuntu-22.04-server-cloudimg-amd64.img"
+    arch: "x86_64"
+
+# ---------------------------------------------------------------------------
+# Resources — adjust to how much of the iMac you want to dedicate
+# ---------------------------------------------------------------------------
+cpus: 4
+memory: "8GiB"
+disk: "40GiB"
+
+# ---------------------------------------------------------------------------
+# Networking — use "shared" so the VM can reach the LAN (and the N100 master)
+# ---------------------------------------------------------------------------
+networks:
+  - lima: shared
+
+# ---------------------------------------------------------------------------
+# Port forwarding — forwards the K3s API port from the Lima VM to the
+# macOS host so the N100 master node (on the LAN) can reach the worker
+# through the iMac's IP address.
+#
+# Security note: hostIP "0.0.0.0" is intentional here — the N100 master
+# needs to initiate connections back to this worker over the local network.
+# If you only need kubectl access from the iMac itself, change to "127.0.0.1".
+# Ensure your home router/firewall does not expose port 6443 to the internet.
+# ---------------------------------------------------------------------------
+portForwards:
+  - guestPort: 6443
+    hostPort: 6443
+    hostIP: "0.0.0.0"
+
+# ---------------------------------------------------------------------------
+# SSH — Lima auto-picks a free local port; 60022 is a safe default
+# ---------------------------------------------------------------------------
+ssh:
+  localPort: 60022
+  loadDotSSHPubKeys: true
+
+# ---------------------------------------------------------------------------
+# Mounts — read-only home directory so you can copy files in easily
+# ---------------------------------------------------------------------------
+mounts:
+  - location: "~"
+    writable: false
+  - location: "/tmp/lima"
+    writable: true
+
+# ---------------------------------------------------------------------------
+# Provisioning — system-level setup that runs once on first boot
+# ---------------------------------------------------------------------------
+provision:
+  - mode: system
+    script: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+
+      # -----------------------------------------------------------------------
+      # 1. Disable swap (required by Kubernetes / K3s)
+      # -----------------------------------------------------------------------
+      swapoff -a
+      sed -i '/\sswap\s/d' /etc/fstab
+
+      # -----------------------------------------------------------------------
+      # 2. Kernel parameters for K3s networking
+      # -----------------------------------------------------------------------
+      cat > /etc/sysctl.d/99-k3s.conf <<'SYSCTL'
+      net.bridge.bridge-nf-call-iptables  = 1
+      net.bridge.bridge-nf-call-ip6tables = 1
+      net.ipv4.ip_forward                 = 1
+      SYSCTL
+      sysctl --system
+
+      # -----------------------------------------------------------------------
+      # 3. Install essentials
+      # -----------------------------------------------------------------------
+      apt-get update -y
+      apt-get install -y curl wget git vim htop net-tools ca-certificates
+
+# ---------------------------------------------------------------------------
+# Readiness probe — wait for systemd before Lima marks the VM as "Running"
+# ---------------------------------------------------------------------------
+probes:
+  - script: |
+      #!/usr/bin/env bash
+      if ! timeout 30s bash -c "until command -v systemctl >/dev/null 2>&1; do sleep 3; done"; then
+        echo >&2 "systemctl not ready yet"
+        exit 1
+      fi
+    hint: "Waiting for systemd inside the Lima VM to become ready…"
