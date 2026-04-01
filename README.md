@@ -11,7 +11,8 @@
 | 04 | [아이맥(iMac M1) + Lima로 K3s 워커 노드 구성](docs/04-아이맥-lima-설치.md) | Lima 설치, Ubuntu VM 생성, 포트 포워딩, K3s 에이전트 연결 |
 | 05 | [맥북에어에서 외부 원격으로 서버 관리하기](docs/05-맥북에어-원격-관리.md) | 고정 IP + 포트포워딩, SSH 설정, kubectl 원격 접속, 맥북에어 관리 워크스테이션 구성 |
 | 06 | [노드 NotReady 트러블슈팅 (iMac Lima 워커 노드)](docs/06-노드-notready-트러블슈팅.md) | Lima 네트워크 단절로 인한 NotReady 진단 및 복구, 예방 조치 |
-| 07 | N5095 미니PC 워커 노드 추가 *(작업 예정)* | Ubuntu 설치, K3s 워커 노드 구성, 클러스터 합류 |
+| 07 | [아이맥에 Ollama 설치 및 qwen2.5-coder:14b 운영](docs/07-아이맥-올라마-설치.md) | macOS 호스트에 Ollama 설치 (Metal GPU 가속), qwen2.5-coder:14b 모델 운영, K3s 클러스터 연동 |
+| 08 | N5095 미니PC 워커 노드 추가 *(작업 예정)* | Ubuntu 설치, K3s 워커 노드 구성, 클러스터 합류 |
 # KEUN-Server-Federation: 하이브리드 K3s 클러스터
 
 > *"오래된 하드웨어도 새로운 삶을 누릴 수 있다. 리눅스는 배울 수 있다. 그리고 클러스터는 처음부터 직접 만들 수 있다."*
@@ -38,6 +39,7 @@ graph TD
         subgraph WORKERS["워커 노드"]
             MBP["💻 맥북 프로 2014 (인텔)<br/>Ubuntu 22.04 — 업사이클링!<br/>K3s 에이전트 (워커)<br/>192.168.x.20"]
             LIMA["🍎 iMac M1 — Lima VM<br/>macOS 위의 Ubuntu VM<br/>K3s 에이전트 (워커)<br/>192.168.x.30"]
+            OLLAMA["🤖 Ollama (macOS 호스트)<br/>qwen2.5-coder:14b<br/>Metal GPU 가속<br/>:11434"]
             N5095["🖥️ Intel N5095 (추가 예정)<br/>Ubuntu Server<br/>K3s 에이전트 (워커)<br/>192.168.x.40"]
         end
     end
@@ -47,6 +49,7 @@ graph TD
     ROUTER --> MBP
     N100 -- "K3s API" --> MBP
     N100 -- "K3s API" --> LIMA
+    LIMA -. "Ollama API :11434" .-> OLLAMA
     N100 -. "연결 예정" .-> N5095
 ```
 
@@ -161,17 +164,21 @@ KEUN-Server-Federation/
 │   ├── 04-아이맥-lima-설치.md
 │   ├── 05-맥북에어-원격-관리.md       # 고정 IP + 포트포워딩, 원격 SSH/kubectl 설정
 │   ├── 06-노드-notready-트러블슈팅.md # Lima 네트워크 단절로 인한 NotReady 진단 및 복구
-│   └── 07-n5095-워커-노드-추가.md    # (작업 예정) N5095 Ubuntu 설치 및 K3s 클러스터 합류
+│   ├── 07-아이맥-올라마-설치.md       # Ollama 설치, qwen2.5-coder:14b, K3s 클러스터 연동
+│   └── 08-n5095-워커-노드-추가.md    # (작업 예정) N5095 Ubuntu 설치 및 K3s 클러스터 합류
 ├── manifests/                         # 쿠버네티스 YAML 매니페스트
 │   ├── namespace.yaml
 │   ├── nginx-deployment.yaml
-│   └── monitoring/
-│       └── node-exporter-daemonset.yaml
+│   ├── monitoring/
+│   │   └── node-exporter-daemonset.yaml
+│   └── ollama/
+│       └── ollama-service.yaml         # iMac Ollama → K3s Service/Endpoints
 └── scripts/
     └── setup/
         ├── mbp-2014-ubuntu-setup.sh        # 2014 맥북 프로용 Ubuntu 설정 스크립트
         ├── lima-ubuntu-k3s.yaml            # Lima VM 템플릿 (Ubuntu 22.04, 4vCPU, 8GiB)
         ├── lima-k3s-setup.sh               # macOS 호스트 스크립트 — Lima 설치 + K3s 에이전트 클러스터 참여
+        ├── ollama-imac-setup.sh            # macOS 호스트 스크립트 — Ollama 설치 + qwen2.5-coder:14b 모델 등록
         ├── ssh-port-forward-setup.sh       # 서버용 SSH 원격 접속 설정 스크립트 (고정 IP + 포트포워딩)
         └── macbook-air-remote-setup.sh     # 맥북에어 원격 관리 환경 설정 스크립트
 ```
@@ -214,7 +221,7 @@ kubectl apply -f manifests/monitoring/
 |------|----------|----------|------|
 | `n100-master` | Intel N100 미니PC (4코어/4스레드, 16GB RAM, 256G SSD) | Ubuntu Server 22.04 | 컨트롤 플레인 |
 | `mbp-2014-worker` | 맥북 프로 13" 2014 (i5, 16GB RAM) | Ubuntu 22.04 LTS | 워커 노드 |
-| `lima-worker` | iMac(M1) → Lima VM (4 vCPU, 8GB vRAM) | Ubuntu 22.04 (VM) | 워커 노드 |
+| `lima-worker` | iMac(M1) → Lima VM (4 vCPU, 8GB vRAM) + Ollama :11434 (Metal GPU) | Ubuntu 22.04 (VM) + macOS | 워커 노드 + LLM 추론 (qwen2.5-coder:14b) |
 | `n5095-worker` *(예정)* | Intel N5095 미니PC (8G RAM, 256G SSD) | Ubuntu Server | 워커 노드 (추가 예정) |
 | — | 맥북에어(M2) | macOS | 원격 관리 워크스테이션 |
 
