@@ -12,12 +12,12 @@
 | 05 | [맥북에어에서 외부 원격으로 서버 관리하기](docs/05-맥북에어-원격-관리.md) | 고정 IP + 포트포워딩, SSH 설정, kubectl 원격 접속, 맥북에어 관리 워크스테이션 구성 |
 | 06 | [노드 NotReady 트러블슈팅 (iMac Lima 워커 노드)](docs/06-노드-notready-트러블슈팅.md) | Lima 네트워크 단절로 인한 NotReady 진단 및 복구, 예방 조치 |
 | 07 | [아이맥에 Ollama 설치 및 qwen2.5-coder:14b 운영](docs/07-아이맥-올라마-설치.md) | macOS 호스트에 Ollama 설치 (Metal GPU 가속), qwen2.5-coder:14b 모델 운영, K3s 클러스터 연동 |
-| 08 | N5095 미니PC 워커 노드 추가 *(작업 예정)* | Ubuntu 설치, K3s 워커 노드 구성, 클러스터 합류 |
+| 08 | [N5095 미니PC 워커 노드 추가](docs/08-n5095-워커-노드-추가.md) | Ubuntu 설치, K3s 워커 노드 구성, 클러스터 합류 |
 # KEUN-Server-Federation: 하이브리드 K3s 클러스터
 
 > *"오래된 하드웨어도 새로운 삶을 누릴 수 있다. 리눅스는 배울 수 있다. 그리고 클러스터는 처음부터 직접 만들 수 있다."*
 
-다양한 하드웨어 자원(Intel N100, 2014 맥북 프로, Lima VM을 활용한 iMac M1, 맥북에어(원격 관리 워크스테이션))을 활용하여 구축한 하이브리드 쿠버네티스(K3s) 클러스터의 구축 및 운영 기록입니다. Intel N5095 미니PC를 추가 워커 노드로 편입하는 작업도 진행 예정입니다.
+다양한 하드웨어 자원(Intel N100, 2014 맥북 프로, Lima VM을 활용한 iMac M1, 맥북에어(원격 관리 워크스테이션), Intel N5095 미니PC)을 활용하여 구축한 하이브리드 쿠버네티스(K3s) 클러스터의 구축 및 운영 기록입니다.
 
 ---
 
@@ -40,7 +40,7 @@ graph TD
             MBP["💻 맥북 프로 2014 (인텔)<br/>Ubuntu 22.04 — 업사이클링!<br/>K3s 에이전트 (워커)<br/>192.168.x.20"]
             LIMA["🍎 iMac M1 — Lima VM<br/>macOS 위의 Ubuntu VM<br/>K3s 에이전트 (워커)<br/>192.168.x.30"]
             OLLAMA["🤖 Ollama (macOS 호스트)<br/>qwen2.5-coder:14b<br/>Metal GPU 가속<br/>:11434"]
-            N5095["🖥️ Intel N5095 (추가 예정)<br/>Ubuntu Server<br/>K3s 에이전트 (워커)<br/>192.168.x.40"]
+            N5095["🖥️ Intel N5095<br/>Ubuntu Server 22.04<br/>K3s 에이전트 (워커)<br/>192.168.x.40"]
         end
     end
 
@@ -50,7 +50,7 @@ graph TD
     N100 -- "K3s API" --> MBP
     N100 -- "K3s API" --> LIMA
     LIMA -. "Ollama API :11434" .-> OLLAMA
-    N100 -. "연결 예정" .-> N5095
+    N100 -- "K3s API" --> N5095
 ```
 
 ---
@@ -165,7 +165,7 @@ KEUN-Server-Federation/
 │   ├── 05-맥북에어-원격-관리.md       # 고정 IP + 포트포워딩, 원격 SSH/kubectl 설정
 │   ├── 06-노드-notready-트러블슈팅.md # Lima 네트워크 단절로 인한 NotReady 진단 및 복구
 │   ├── 07-아이맥-올라마-설치.md       # Ollama 설치, qwen2.5-coder:14b, K3s 클러스터 연동
-│   └── 08-n5095-워커-노드-추가.md    # (작업 예정) N5095 Ubuntu 설치 및 K3s 클러스터 합류
+│   └── 08-n5095-워커-노드-추가.md    # N5095 Ubuntu 설치 및 K3s 클러스터 합류
 ├── manifests/                         # 쿠버네티스 YAML 매니페스트
 │   ├── namespace.yaml
 │   ├── nginx-deployment.yaml
@@ -222,7 +222,7 @@ kubectl apply -f manifests/monitoring/
 | `n100-master` | Intel N100 미니PC (4코어/4스레드, 16GB RAM, 256G SSD) | Ubuntu Server 22.04 | 컨트롤 플레인 |
 | `mbp-2014-worker` | 맥북 프로 13" 2014 (i5, 16GB RAM) | Ubuntu 22.04 LTS | 워커 노드 |
 | `lima-worker` | iMac(M1) → Lima VM (4 vCPU, 8GB vRAM) + Ollama :11434 (Metal GPU) | Ubuntu 22.04 (VM) + macOS | 워커 노드 + LLM 추론 (qwen2.5-coder:14b) |
-| `n5095-worker` *(예정)* | Intel N5095 미니PC (8G RAM, 256G SSD) | Ubuntu Server | 워커 노드 (추가 예정) |
+| `n5095-worker` | Intel N5095 미니PC (8G RAM, 256G SSD) | Ubuntu Server 22.04 | 워커 노드 |
 | — | 맥북에어(M2) | macOS | 원격 관리 워크스테이션 |
 
 ---
