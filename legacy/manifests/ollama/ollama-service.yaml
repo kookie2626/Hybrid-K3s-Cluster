@@ -1,0 +1,55 @@
+# =============================================================================
+# ollama-service.yaml
+# Exposes the Ollama instance running natively on the iMac (macOS host) as a
+# Kubernetes Service inside the K3s cluster.
+#
+# Because Ollama runs directly on macOS (not inside the Lima VM) to leverage
+# Metal GPU acceleration, we use a headless Service + Endpoints pair that
+# points to the iMac's LAN IP address.
+#
+# Before applying, replace OLLAMA_IMAC_IP with the actual LAN IP of the iMac
+# (the macOS host IP — typically the value of `ipconfig getifaddr en0`):
+#
+#   sed 's/OLLAMA_IMAC_IP/192.168.x.30/g' ollama-service.yaml | kubectl apply -f -
+#
+# Or edit the file directly and run:
+#   kubectl apply -f manifests/ollama/ollama-service.yaml
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Endpoints — points to the iMac macOS host where Ollama is listening
+# ---------------------------------------------------------------------------
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: ollama
+  namespace: keun-federation
+  labels:
+    app: ollama
+subsets:
+  - addresses:
+      - ip: OLLAMA_IMAC_IP   # ← Replace with `ipconfig getifaddr en0` on iMac
+    ports:
+      - name: http
+        port: 11434
+        protocol: TCP
+---
+# ---------------------------------------------------------------------------
+# Service — provides a stable in-cluster DNS name for the Ollama endpoint
+#   http://ollama.keun-federation.svc.cluster.local:11434
+# ---------------------------------------------------------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama
+  namespace: keun-federation
+  labels:
+    app: ollama
+spec:
+  # No selector — traffic is routed via the Endpoints resource above
+  ports:
+    - name: http
+      port: 11434
+      targetPort: 11434
+      protocol: TCP
+  type: ClusterIP

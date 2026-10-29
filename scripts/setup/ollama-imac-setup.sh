@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Historical v1 automation; review legacy/ and docs/v2/ before use. Not a v2 installer.
 # =============================================================================
 # ollama-imac-setup.sh
 # macOS host script — installs Ollama natively on iMac M1 (Apple Silicon),

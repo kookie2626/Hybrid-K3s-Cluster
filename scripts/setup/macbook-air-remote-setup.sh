@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Historical v1 automation; review legacy/ and docs/v2/ before use. Not a v2 installer.
 # =============================================================================
 # macbook-air-remote-setup.sh
 # Sets up a MacBook Air as a remote management workstation for the

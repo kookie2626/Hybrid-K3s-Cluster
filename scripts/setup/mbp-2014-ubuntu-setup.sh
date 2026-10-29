@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Historical v1 automation; review legacy/ and docs/v2/ before use. Not a v2 installer.
 # =============================================================================
 # mbp-2014-ubuntu-setup.sh
 # Ubuntu 22.04 LTS setup script for a 2014 MacBook Pro (Intel)
