@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Historical v1 automation; review legacy/ and docs/v2/ before use. Not a v2 installer.
 # =============================================================================
 # ssh-port-forward-setup.sh
 # Hardens the SSH server on an Ubuntu node for remote management via

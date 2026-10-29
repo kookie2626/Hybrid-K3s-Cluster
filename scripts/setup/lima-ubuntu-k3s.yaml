@@ -1,3 +1,4 @@
+# Legacy v1 template; iMac/Lima is excluded from v2. See legacy/README.md.
 # =============================================================================
 # lima-ubuntu-k3s.yaml
 # Lima VM template — Ubuntu 22.04 LTS configured as a K3s worker node

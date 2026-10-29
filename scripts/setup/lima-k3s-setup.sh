@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Historical v1 automation; review legacy/ and docs/v2/ before use. Not a v2 installer.
 # =============================================================================
 # lima-k3s-setup.sh
 # macOS host script — installs Lima, creates an Ubuntu 22.04 VM, and joins
